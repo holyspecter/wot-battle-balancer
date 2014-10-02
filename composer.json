@@ -1,0 +1,13 @@
+{
+    "name": "rok/battle-balancer",
+    "description": "Battle balancer for WoT (UA WebChallenge task)",
+    "authors": [
+        {
+            "name": "rok",
+            "email": "footballer17@i.ua"
+        }
+    ],
+    "require": {
+        "php-curl-class/php-curl-class": "~2.1"
+    }
+}
