@@ -8,6 +8,7 @@
         }
     ],
     "require": {
-        "php-curl-class/php-curl-class": "~2.1"
+        "php-curl-class/php-curl-class": "~2.1",
+        "symfony/console": "2.6.*@dev"
     }
 }
