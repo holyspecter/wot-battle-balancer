@@ -5,6 +5,12 @@ namespace BattleBalancer\WotApi;
 use Curl\Curl;
 use BattleBalancer\WotApi\Exception\ApiException;
 
+/**
+ * Class BaseConnector
+ *
+ * @author Roman Kliuchko <hospect@gmail.com>
+ * @package BattleBalancer\WotApi
+ */
 abstract class BaseConnector
 {
     const STATUS_SUCCESS = 'ok';

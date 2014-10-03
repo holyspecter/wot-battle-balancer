@@ -2,6 +2,12 @@
 
 namespace BattleBalancer\WotApi;
 
+/**
+ * Class WotConnector
+ *
+ * @author Roman Kliuchko <hospect@gmail.com>
+ * @package BattleBalancer\WotApi
+ */
 class WotConnector extends BaseConnector
 {
     const TOP_CLANS_LIMIT = 10;

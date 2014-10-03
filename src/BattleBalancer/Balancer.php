@@ -4,20 +4,23 @@ namespace BattleBalancer;
 
 use BattleBalancer\WotApi\WotConnector;
 
+/**
+ * Class Balancer
+ *
+ * @author Roman Kliuchko <hospect@gmail.com>
+ * @package BattleBalancer
+ */
 class Balancer
 {
     const PLAYERS_COUNT = 15;
 
-    /** @var array  */
-    protected $clan1Members;
+    /** @var  Clan */
+    protected $clan1;
 
-    /** @var array  */
-    protected $clan2Members;
+    /** @var  Clan */
+    protected $clan2;
 
-    protected $team1;
-
-    protected $team2;
-
+    /** @var \BattleBalancer\WotApi\WotConnector  */
     protected $wotConnector;
 
     /** @var array  */
@@ -32,14 +35,16 @@ class Balancer
     public function __construct($precision = null)
     {
         $this->wotConnector = new WotConnector();
+        $this->clan1 = new Clan();
+        $this->clan2 = new Clan();
 
-        list($clan1Members, $clan2Members) = $this->getRandomClansMembers();
+        $clanMembers = $this->getRandomClansMembers();
 
         // Need to make arrays from iterable objects
-        foreach ($clan1Members as $clan1Member) {
-            $this->clan1Members[] = $clan1Member;
+        foreach ($clanMembers[0] as $clan1Member) {
+            $this->clan1->members[] = $clan1Member;
         }
-        foreach ($clan2Members as $clan2Member) {
+        foreach ($clanMembers[1] as $clan2Member) {
             $this->clan2Members[] = $clan2Member;
         }
 
@@ -52,11 +57,11 @@ class Balancer
     /**
      * @return array
      */
-    public function getTeams()
+    public function getClans()
     {
         return [
-            $this->team1,
-            $this->team2,
+            $this->clan1,
+            $this->clan2,
         ];
     }
 
@@ -68,37 +73,48 @@ class Balancer
         $topClans = $this->wotConnector->getTopClans();
         shuffle($topClans);
 
+        $this->clan1->id = $topClans[0]->clan_id;
+        $this->clan1->name = $topClans[0]->name;
+        $this->clan2->id = $topClans[1]->clan_id;
+        $this->clan2->name = $topClans[1]->name;
+
         return [
-            $this->wotConnector->getMembers($topClans[0]->clan_id),
-            $this->wotConnector->getMembers($topClans[1]->clan_id),
+            $this->wotConnector->getMembers($this->clan1->id),
+            $this->wotConnector->getMembers($this->clan2->id),
         ];
     }
 
+    /**
+     * Takes random players from first clan
+     */
     protected function initTeam1()
     {
-        shuffle($this->clan1Members);
+        shuffle($this->clan1->members);
         for ($i = 0; $i < self::PLAYERS_COUNT; $i++) {
-            $unit = $this->composeUnit($this->clan1Members[$i]->account_id);
-            $unit->accountName = $this->clan1Members[$i]->account_name;
+            $unit = $this->composeUnit($this->clan1->members[$i]->account_id);
+            $unit->accountName = $this->clan1->members[$i]->account_name;
 
-            $this->team1[] = $unit;
+            $this->clan1->team[] = $unit;
         }
     }
 
+    /**
+     * Chooses players from second clan depending on parameters of first clan's team
+     */
     protected function initTeam2()
     {
         shuffle($this->clan2Members);
         $accountIds = [];
-        foreach ($this->team1 as $opponent) {
+        foreach ($this->clan1->team as $opponent) {
             $i = 0;
-            while (count($this->team2) < self::PLAYERS_COUNT) {
+            while (count($this->clan2->team) < self::PLAYERS_COUNT) {
                 $accountId = $this->clan2Members[$i]->account_id;
                 if (in_array($accountId, $accountIds)) {
                     $i = $i === (count($this->clan2Members) - 1) ? 0 : $i + 1;
                     continue;
                 } elseif ($unit = $this->composeUnit($accountId, $opponent)) {
                     $unit->accountName = $this->clan2Members[$i]->account_name;
-                    $this->team2[] = $unit;
+                    $this->clan2->team[] = $unit;
 
                     $accountIds[] = $accountId;
                     break;

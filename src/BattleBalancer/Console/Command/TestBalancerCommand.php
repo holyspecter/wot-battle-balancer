@@ -2,12 +2,19 @@
 
 namespace BattleBalancer\Console\Command;
 
+use BattleBalancer\Clan;
 use BattleBalancer\Balancer;
-use BattleBalancer\WotApi\Exception\ApiException;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Class TestBalancerCommand
+ *
+ * @author Roman Kliuchko <hospect@gmail.com>
+ * @package BattleBalancer\Console\Command
+ */
 class TestBalancerCommand extends Command
 {
     /** {@inheritdoc} */
@@ -15,7 +22,8 @@ class TestBalancerCommand extends Command
     {
         $this
             ->setName('balancer:test')
-            ->setDescription('Runs balancing for two random clans.');
+            ->setDescription('Runs balancing for two random clans.')
+            ->addArgument('precision', InputArgument::OPTIONAL, 'Pass float value from 0.01 to 1. Less value will increase error but may require more time.');
     }
 
     /** {@inheritdoc} */
@@ -23,23 +31,56 @@ class TestBalancerCommand extends Command
     {
         $start = microtime(true);
 
-        $output->writeln(sprintf("<comment>Balancing started... Please wait, it requires some time.</comment>"));
-
         try {
-            $balancer = new Balancer();
-            $teams = $balancer->getTeams();
+            $this->checkArguments($input);
+
+            $output->writeln(sprintf("<comment>Balancing started... Please wait, it requires some time.</comment>"));
+
+            $clans = (new Balancer($input->getArgument('precision')))
+                ->getClans();
 
             $output->writeln(sprintf("<comment>Balancing is finished. Here are results:</comment>"));
-            $output->writeln(sprintf("<info>%s \t\t %s</info>", $teams[0][$i], $teams[1][$i]));
-            for ($i = 0; $i < 15; $i++) {
-                $output->writeln(sprintf("<info>%s \t\t %s</info>", $teams[0][$i], $teams[1][$i]));
-            }
+            $this->printTable($clans, $output);
 
             $end = microtime(true);
 
             $output->writeln("\n<comment>Time spent: " . ($end - $start) . "sec.</comment>");
-        } catch (ApiException $e) {
-            $output->writeln(spreintf("<error>%s</error>", $e->getMessage()));
+        } catch (\Exception $e) {
+            $output->writeln(sprintf("<error>%s</error>", $e->getMessage()));
         }
+    }
+
+    /**
+     * @param InputInterface $input
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function checkArguments(InputInterface $input)
+    {
+        $precision = $input->getArgument('precision');
+        if (!is_null($precision)) {
+            if (floatval($precision) < 0.01 || floatval($precision) >= 1) {
+                throw new \InvalidArgumentException(
+                    sprintf("`%s` is not a valid parameter. Pass float value in range [0.01;1).", $precision)
+                );
+            }
+        }
+    }
+
+    /**
+     * @param Clan[]          $clans
+     * @param OutputInterface $output
+     */
+    protected function printTable(array $clans, OutputInterface $output)
+    {
+        $table = new \Console_Table();
+        $table->setHeaders([$clans[0], $clans[1]]);
+        for ($i = 0; $i < 15; $i++) {
+            $table->addRow([$clans[0]->team[$i], $clans[1]->team[$i]]);
+        }
+
+        $output->write('<info>');
+        $output->write($table->getTable());
+        $output->writeln('</info>');
     }
 } 

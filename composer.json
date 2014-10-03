@@ -1,14 +1,15 @@
 {
-    "name": "rok/battle-balancer",
+    "name": "hospect/battle-balancer",
     "description": "Battle balancer for WoT (UA WebChallenge task)",
     "authors": [
         {
-            "name": "rok",
-            "email": "footballer17@i.ua"
+            "name": "hospect",
+            "email": "hospect@gmail.com"
         }
     ],
     "require": {
         "php-curl-class/php-curl-class": "~2.1",
-        "symfony/console": "2.6.*@dev"
+        "symfony/console": "2.6.*@dev",
+        "pear/console_table": "dev-trunk"
     }
 }
